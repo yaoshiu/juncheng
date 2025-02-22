@@ -1,36 +1,10 @@
-<script lang="ts">
-  import {
-    ArrowBigUp,
-    ArrowDown,
-    ArrowLeft,
-    ArrowRight,
-    ArrowUp,
-    ChevronUp,
-    CornerDownLeft,
-    Delete,
-    Option,
-    Space,
-    type Icon,
-  } from 'lucide-svelte';
-  import DeleteKey from './DeleteKey.svelte';
-  import type { Component } from 'svelte';
-  import { MenubarItem, MenubarShortcut } from '$lib/components/ui/menubar';
-  import { register, unregister } from '@tauri-apps/plugin-global-shortcut';
-
-  interface Props {
-    name: string;
-    shortcut: string;
-    action: () => void;
-  }
-
-  const { name, shortcut, action, ...props }: Props = $props();
-
+<script lang="ts" module>
   interface Shortcut {
-    modifiers: ('cmdorctrl' | 'shift' | 'alt')[];
+    modifiers: ('ctrl' | 'meta' | 'shift' | 'alt')[];
     key: string;
   }
 
-  function parseShortcut(shortcut: string): Shortcut | null {
+  export function parseShortcut(shortcut: string): Shortcut | null {
     const match = shortcut.match(/^<(.*)>$/);
     if (match) {
       const content = match[1];
@@ -48,7 +22,7 @@
         .map((modifier) => {
           switch (modifier.toLowerCase()) {
             case 'c':
-              return 'cmdorctrl';
+              return /Mac/.test(navigator.userAgent) ? 'meta' : 'ctrl';
             case 'm':
               return 'alt';
             case 's':
@@ -72,9 +46,37 @@
       };
     }
   }
+</script>
+
+<script lang="ts">
+  import {
+    ArrowBigUp,
+    ArrowDown,
+    ArrowLeft,
+    ArrowRight,
+    ArrowUp,
+    ChevronUp,
+    CornerDownLeft,
+    Delete,
+    Option,
+    Space,
+    type Icon,
+  } from 'lucide-svelte';
+  import DeleteKey from './DeleteKey.svelte';
+  import type { Component } from 'svelte';
+  import { MenubarItem, MenubarShortcut } from '$lib/components/ui/menubar';
+
+  interface Props {
+    name: string;
+    shortcut: string;
+    action: () => void;
+  }
+
+  const { name, shortcut, action, ...props }: Props = $props();
 
   const icons: { [key: string]: typeof Icon | Component } = {
-    cmdorctrl: ChevronUp,
+    ctrl: ChevronUp,
+    meta: ChevronUp,
     shift: ArrowBigUp,
     alt: Option,
     space: Space,
@@ -93,14 +95,6 @@
 
   if (!parsed) {
     console.warn(`Invalid shortcut: ${shortcut}`);
-  } else {
-    $effect(() => {
-      const { modifiers, key } = parsed;
-      const shortcut = modifiers.map((m) => `${m}+`).join('') + key;
-      register(shortcut, action);
-
-      return () => unregister(shortcut);
-    });
   }
 </script>
 

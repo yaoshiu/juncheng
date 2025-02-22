@@ -14,8 +14,8 @@
   "license": "MIT",
   "dependencies": {
     "@tauri-apps/api": "^2.2.0",
-    "@tauri-apps/plugin-global-shortcut": "^2.2.0",
     "@tauri-apps/plugin-opener": "^2.2.5",
+    "@tauri-apps/plugin-sql": "^2.2.0",
     "clsx": "^2.1.1",
     "mode-watcher": "^0.5.1",
     "tailwind-merge": "^3.0.1",
