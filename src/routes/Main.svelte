@@ -1,38 +1,57 @@
-<script lang="ts" module>
+<script lang="ts">
+  import {
+    Card,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+  } from '$lib/components/ui/card';
   import Database from '@tauri-apps/plugin-sql';
 
-  const db = await Database.load('sqlite:test.db');
+  interface Bill {
+    id: number;
+    name: string;
+    modified: string;
+  }
 
-  await db.execute(`CREATE TABLE IF NOT EXISTS bills (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    modified DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
+  let database: Database | null = null;
 
-  await db.execute(`CERATE TABLE IF NOT EXISTS products (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL
-  )`);
+  Database.load('sqlite:database.db').then(async (db) => {
+    database = db;
 
-  await db.execute(`CREATE TABLE IF NOT EXISTS bill_products (
-    bill_id INTEGER,
-    product_id INTEGER,
-    price DECIMAL(10, 2),
-    quantity INTEGER DEFAULT 1,
-    PRIMARY KEY (bill_id, product_id),
-    FOREIGN KEY (bill_id) REFERENCES bills(id),
-    FOREIGN KEY (product_id) REFERENCES products(id)
-  )`);
+    await db.execute(`CREATE TABLE IF NOT EXISTS bills (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      modified DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
 
-  const bills = await db.select('SELECT * FROM bills ORDER BY modified DESC');
+    await db.execute(`CREATE TABLE IF NOT EXISTS products (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL
+    )`);
 
-  console.log(bills);
-</script>
-
-<script lang="ts">
-  $effect(() => {
-    return () => {
-      db.close();
-    };
+    await db.execute(`CREATE TABLE IF NOT EXISTS bill_products (
+      bill_id INTEGER,
+      product_id INTEGER,
+      price DECIMAL(10, 2),
+      quantity INTEGER DEFAULT 1,
+      PRIMARY KEY (bill_id, product_id),
+      FOREIGN KEY (bill_id) REFERENCES bills(id),
+      FOREIGN KEY (product_id) REFERENCES products(id)
+    )`);
   });
 </script>
+
+{#if database}
+  {#await database.select<Bill[]>('SELECT * FROM bills ORDER BY modified DESC') then bills}
+    {#each bills as bill}
+      <Card>
+        <CardHeader>
+          <CardTitle>{bill.name}</CardTitle>
+        </CardHeader>
+        <CardFooter>
+          <p>{bill.modified}</p>
+        </CardFooter>
+      </Card>
+    {/each}
+  {/await}
+{/if}
